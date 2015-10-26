@@ -17,3 +17,9 @@ F:\Programming\opdrachten\INFOIBV\obj\x86\Release\INFOIBV.exe
 F:\Programming\opdrachten\INFOIBV\obj\x86\Release\INFOIBV.pdb
 C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.exe
 C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.pdb
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\bin\Release\INFOIBV.exe
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\bin\Release\INFOIBV.pdb
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.csprojResolveAssemblyReference.cache
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.INFOIBV.resources
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.Properties.Resources.resources
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.csproj.GenerateResource.Cache

@@ -85,7 +85,12 @@ namespace INFOIBV
 
             }
 
-            Image = Dilate(Image, 2);
+
+
+            for (int a = 0; a < 5; a++ )
+            {
+                Image = Dilate(Image);
+            }
 
             //==========================================================================================
 
@@ -109,18 +114,10 @@ namespace INFOIBV
                 OutputImage.Save(saveImageDialog.FileName);                 // Save the output image
         }
 
-        Color[,] Dilate(Color[,] image, int dilateCount)
+        Color[,] Dilate(Color[,] image)
         {
-            Color[,] tempImage = image;
             Color[,] newImage = new Color[InputImage.Size.Width, InputImage.Size.Height];
-            for (int c = 0; c < dilateCount; c++)
-            {
-                for (int x = 3; x < InputImage.Size.Width - 3; x++)
-                {
-                    for (int y = 3; y < InputImage.Size.Height - 3; y++)
-                    {
-                        // Dilate
-                        byte[,] dilateKernel = new byte[5, 5]
+            byte[,] dilateKernel = new byte[5, 5]
                     {
                         {0,0,1,0,0},
                         {0,1,1,1,0},
@@ -128,25 +125,27 @@ namespace INFOIBV
                         {0,1,1,1,0},
                         {0,0,1,0,0}
                     };
-                        Color newColor = Color.FromArgb(0, 0, 0);
-                        bool foundColor = false;
-                        for (int i = 0; i < 5 && !foundColor; i++)
+
+            for (int x = 3; x < InputImage.Size.Width - 3; x++)
+            {
+                for (int y = 3; y < InputImage.Size.Height - 3; y++)
+                {
+                    Color newColor = Color.FromArgb(0, 0, 0);
+                    bool foundColor = false;
+                    for (int i = 0; i < 5 && !foundColor; i++)
+                    {
+                        for (int j = 0; j < 5 && !foundColor; j++)
                         {
-                            for (int j = 0; j < 5 && !foundColor; j++)
+                            if (image[x - 2 + i, y - 2 + j].R * dilateKernel[i, j] > 0)
                             {
-                                if (tempImage[x - 2 + i, y - 2 + j].R * dilateKernel[i, j] > 0)
-                                {
-                                    newColor = Color.FromArgb(255, 255, 255);
-                                    foundColor = true;
-                                }
+                                newColor = Color.FromArgb(255, 255, 255);
+                                foundColor = true;
                             }
                         }
-                        newImage[x, y] = newColor;
                     }
+                    newImage[x, y] = newColor;
                 }
-                tempImage = newImage;
             }
-
             return newImage;
         }
     }
