@@ -15,3 +15,5 @@ F:\Programming\opdrachten\INFOIBV\obj\x86\Release\INFOIBV.Properties.Resources.r
 F:\Programming\opdrachten\INFOIBV\obj\x86\Release\INFOIBV.csproj.GenerateResource.Cache
 F:\Programming\opdrachten\INFOIBV\obj\x86\Release\INFOIBV.exe
 F:\Programming\opdrachten\INFOIBV\obj\x86\Release\INFOIBV.pdb
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.exe
+C:\Users\Bor\Documents\GitHub\BeeldVerwerking\INFOIBV\obj\x86\Release\INFOIBV.pdb
