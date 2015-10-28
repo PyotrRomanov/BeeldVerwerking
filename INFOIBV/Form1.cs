@@ -85,12 +85,15 @@ namespace INFOIBV
 
             CalculateAreas(objectMap);
 
+            CalculateCompactness();
+
             for (int k = 0; k < Objects.Count; k++)
             {
+                //Console.WriteLine("De compactness van " + k + "is: " + Objects[k].Compactness);
                 if ((1 / Objects[k].Compactness) < 0.8)
                 {
-                    DeleteObjects(Objects[k].Objectnr);
-                    Objects.Remove(Objects[k]);
+                    Console.WriteLine("Object " + k + " moet weg");
+                    DeleteObject(Objects[k].Objectnr);
                 }
             }
 
@@ -235,7 +238,7 @@ namespace INFOIBV
 
         void CheckNeighbouringPixels(Color[,] image, int x, int y) {
             if (image[x, y].R > 0 && objectMap[x, y].R == 0) {
-                objectMap[x, y] = Color.FromArgb(objectCount * 20, objectCount * 20, objectCount * 20);
+                objectMap[x, y] = Color.FromArgb(objectCount, objectCount, objectCount);
                 CheckNeighbouringPixels(image, x + 1, y);
                 CheckNeighbouringPixels(image, x - 1, y);
                 CheckNeighbouringPixels(image, x, y + 1);
@@ -254,16 +257,16 @@ namespace INFOIBV
                 {1,1,1},
                 {1,1,1}
             };
-                for (int x = 3; x < whiteObject.Length - 3; x++)
+                for (int x = 3; x < InputImage.Size.Width - 3; x++)
                 {
-                    for (int y = 3; y < whiteObject.Length - 3; y++)
+                    for (int y = 3; y < InputImage.Size.Height - 3; y++)
                     {
                         int tempcount = 0;
                         for (int i = 0; i < 3; i++)
                         {
                             for (int j = 0; j < 3; j++)
                             {
-                                if (whiteObject[x - 2 + i, y - 2 + j].R == Objects[a].Objectnr)
+                                if (whiteObject[x - 1 + i, y - 1 + j].R == Objects[a].Objectnr)
                                 {
                                     tempcount++;
                                 }
@@ -285,9 +288,9 @@ namespace INFOIBV
             for (int i = 0; i < Objects.Count; i++)
             {
                 int area = 0;
-                for (int x = 0; x < whiteObject.Length; x++)
+                for (int x = 0; x < InputImage.Size.Width; x++)
                 {
-                    for (int y = 0; y < whiteObject.Length; y++)
+                    for (int y = 0; y < InputImage.Size.Height; y++)
                     {
                         if (whiteObject[x, y].R == Objects[i].Objectnr)
                         {
@@ -300,7 +303,7 @@ namespace INFOIBV
             }
         }
 
-        private void compactness(Color[,] image)
+        private void CalculateCompactness()
         {
             for (int i = 0; i < Objects.Count; i++)
             {
@@ -322,13 +325,17 @@ namespace INFOIBV
             }
         }
 
-        private void DeleteObjects(int toBeRemoved) {
+        private void DeleteObject(int toBeRemoved) {
             for (int x = 0; x < InputImage.Size.Width; x++)
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    if(objectMap[x,y].R == toBeRemoved){
-                        objectMap[x, y] = Color.FromArgb(0,0,0);
+                    if (objectMap[x, y].R == toBeRemoved)
+                    {
+                        objectMap[x, y] = Color.FromArgb(255, 255, 255);
+                    }
+                    else {
+                        objectMap[x, y] = Color.FromArgb(0, 0, 0);
                     }
                 }
             }
