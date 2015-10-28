@@ -15,7 +15,8 @@ namespace INFOIBV
         private Bitmap InputImage;
         private Bitmap OutputImage;
         int objectCount;
-        int[,] objectMap;
+        Color[,] objectMap;
+        private List<PictureObject> Objects = new List<PictureObject>();
 
         public INFOIBV()
         {
@@ -45,7 +46,7 @@ namespace INFOIBV
             OutputImage = new Bitmap(InputImage.Size.Width, InputImage.Size.Height); // Create new output image
             Color[,] Image = new Color[InputImage.Size.Width, InputImage.Size.Height]; // Create array to speed-up operations (Bitmap functions are very slow)
             objectCount = 0;
-            objectMap = new int[InputImage.Size.Width, InputImage.Size.Height];
+            objectMap = new Color[InputImage.Size.Width, InputImage.Size.Height];
             // Setup progress bar
             progressBar.Visible = true;
             progressBar.Minimum = 1;
@@ -65,12 +66,64 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include your own code here
             // example: create a negative image
+
+            Image = WindowSlice(Image);
+            
+            for(int a = 0; a < 1; a++ ){
+                //Image = Erode(Image);
+            }
+            
+
+            for (int a = 0; a < 11; a++ )
+            {
+                //Image = Dilate(Image);
+            }
+
+            MarkObjects(Image);
+
+            CalculatePerimeters(objectMap);
+
+            CalculateAreas(objectMap);
+
+            for (int k = 0; k < Objects.Count; k++)
+            {
+                if ((1 / Objects[k].Compactness) < 0.8)
+                {
+                    DeleteObjects(Objects[k].Objectnr);
+                    Objects.Remove(Objects[k]);
+                }
+            }
+
+            //==========================================================================================
+
+            // Copy array to output Bitmap
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    OutputImage.SetPixel(x, y, objectMap[x, y]);               // Set the pixel color at coordinate (x,y)
+                }
+            }
+
+            pictureBox2.Image = (Image)OutputImage;                         // Display output image
+            progressBar.Visible = false;                                    // Hide progress bar
+            Console.WriteLine(objectCount);
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            if (OutputImage == null) return;                                // Get out if no output image
+            if (saveImageDialog.ShowDialog() == DialogResult.OK)
+                OutputImage.Save(saveImageDialog.FileName);                 // Save the output image
+        }
+
+        Color[,] WindowSlice(Color[,] image) { 
             for (int x = 0; x < InputImage.Size.Width; x++)
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
                     // Windowslicing
-                    Color pixelColor = Image[x, y];                         // Get the pixel color at coordinate (x,y)
+                    Color pixelColor = image[x, y];                         // Get the pixel color at coordinate (x,y)
                     int greyValue = (pixelColor.R + pixelColor.G + pixelColor.B) / 3;
                     Color updatedColor;
                     if (greyValue > 160)
@@ -81,43 +134,13 @@ namespace INFOIBV
                     {
                         updatedColor = Color.FromArgb(0, 0, 0);
                     }
-                    Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
+                    image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
 
                     progressBar.PerformStep();                              // Increment progress bar
                 }
 
             }
-            
-            for(int a = 0; a < 1; a++ ){
-                Image = Erode(Image);
-            }
-            
-
-            for (int a = 0; a < 10; a++ )
-            {
-                Image = Dilate(Image);
-            }
-
-            //==========================================================================================
-
-            // Copy array to output Bitmap
-            for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    OutputImage.SetPixel(x, y, Image[x, y]);               // Set the pixel color at coordinate (x,y)
-                }
-            }
-
-            pictureBox2.Image = (Image)OutputImage;                         // Display output image
-            progressBar.Visible = false;                                    // Hide progress bar
-        }
-
-        private void saveButton_Click(object sender, EventArgs e)
-        {
-            if (OutputImage == null) return;                                // Get out if no output image
-            if (saveImageDialog.ShowDialog() == DialogResult.OK)
-                OutputImage.Save(saveImageDialog.FileName);                 // Save the output image
+            return image;
         }
 
         Color[,] Dilate(Color[,] image)
@@ -193,148 +216,122 @@ namespace INFOIBV
             return newImage;
         }
 
-        Color[,] MarkObjects(Color[,] image) 
+        void MarkObjects(Color[,] image) 
         {
             Color[,] newImage = new Color[InputImage.Size.Width, InputImage.Size.Height];
             for (int x = 1; x < InputImage.Size.Width - 1; x++)
             {
                 for (int y = 1; y < InputImage.Size.Height - 1; y++)
                 { 
-                    if(image[x,y].R > 0 && objectMap[x,y] == 0){
+                    if(image[x,y].R > 0 && objectMap[x,y].R == 0){
                         objectCount++;
-                        objectMap[x, y] = objectCount;
-                        checkNeighbouringPixels(image, x,y,"left");
-                        //newImage[x, y] = Color.FromArgb(objectCount + 1, objectCount + 1, objectCount +1);
+                        PictureObject p = new PictureObject(objectCount);
+                        Objects.Add(p);
+                        CheckNeighbouringPixels(image, x,y);
                     }
                 }
             }
-            return newImage;
         }
 
-        void checkNeighbouringPixels(Color[,] image, int x, int y, string previouslyChecked) 
-        { 
-            if(previouslyChecked == "left"){
-                if(image[x + 1,y].R > 0 && objectMap[x + 1,y] == 0){
-                    objectMap[x + 1, y] = objectCount;
-                    checkNeighbouringPixels(image, x + 1, y, "left");
-                }
-                if (image[x, y - 1].R > 0 && objectMap[x, y - 1] == 0)
-                {
-                    objectMap[x, y - 1] = objectCount;
-                    checkNeighbouringPixels(image, x, y - 1, "down");
-                }
-                if (image[x, y + 1].R > 0 && objectMap[x, y + 1] == 0)
-                {
-                    objectMap[x, y + 1] = objectCount;
-                    checkNeighbouringPixels(image, x, y + 1, "up");
-                }
+        void CheckNeighbouringPixels(Color[,] image, int x, int y) {
+            if (image[x, y].R > 0 && objectMap[x, y].R == 0) {
+                objectMap[x, y] = Color.FromArgb(objectCount * 20, objectCount * 20, objectCount * 20);
+                CheckNeighbouringPixels(image, x + 1, y);
+                CheckNeighbouringPixels(image, x - 1, y);
+                CheckNeighbouringPixels(image, x, y + 1);
+                CheckNeighbouringPixels(image, x, y - 1);
             }
-            if (previouslyChecked == "right")
-            {
-                if (image[x - 1, y].R > 0 && objectMap[x - 1, y] == 0)
-                {
-                    objectMap[x - 1, y] = objectCount;
-                    checkNeighbouringPixels(image, x - 1, y, "right");
-                }
-                if (image[x, y - 1].R > 0 && objectMap[x, y - 1] == 0)
-                {
-                    objectMap[x, y - 1] = objectCount;
-                    checkNeighbouringPixels(image, x, y - 1, "down");
-                }
-                if (image[x, y + 1].R > 0 && objectMap[x, y + 1] == 0)
-                {
-                    objectMap[x, y + 1] = objectCount;
-                    checkNeighbouringPixels(image, x, y + 1, "up");
-                }
-            }
-            if (previouslyChecked == "down")
-            {
-                if (image[x - 1, y].R > 0 && objectMap[x - 1, y] == 0)
-                {
-                    objectMap[x + 1, y] = objectCount;
-                    checkNeighbouringPixels(image, x + 1, y, "right");
-                }
-                if (image[x, y - 1].R > 0 && objectMap[x, y - 1] == 0)
-                {
-                    objectMap[x, y - 1] = objectCount;
-                    checkNeighbouringPixels(image, x, y - 1, "down");
-                }
-                if (image[x + 1, y].R > 0 && objectMap[x, y + 1] == 0)
-                {
-                    objectMap[x + 1, y] = objectCount;
-                    checkNeighbouringPixels(image, x + 1, y, "left");
-                }
-            }
-            if (previouslyChecked == "up")
-            {
-                if (image[x - 1, y].R > 0 && objectMap[x - 1, y] == 0)
-                {
-                    objectMap[x + 1, y] = objectCount;
-                    checkNeighbouringPixels(image, x + 1, y, "right");
-                }
-                if (image[x, y + 1].R > 0 && objectMap[x, y + 1] == 0)
-                {
-                    objectMap[x, y + 1] = objectCount;
-                    checkNeighbouringPixels(image, x, y + 1, "up");
-                }
-                if (image[x + 1, y].R > 0 && objectMap[x, y + 1] == 0)
-                {
-                    objectMap[x + 1, y] = objectCount;
-                    checkNeighbouringPixels(image, x + 1, y, "left");
-                }
-            }
-
         }
 
-        int perimeter(byte[,] whiteObject)
+        public void CalculatePerimeters(Color[,] whiteObject)
         {
-            int count = 0;
-            byte[,] perimeterKernel = new byte[3, 3]
+            for (int a = 0; a < Objects.Count; a++)
+            {
+                int count = 0;
+                byte[,] perimeterKernel = new byte[3, 3]
             {
                 {1,1,1},
                 {1,1,1},
                 {1,1,1}
             };
-            for (int x = 3; x < whiteObject.Length - 3; x++)
-            {
-                for (int y = 3; y < whiteObject.Length - 3; y++)
+                for (int x = 3; x < whiteObject.Length - 3; x++)
                 {
-                    int tempcount = 0;
-                    for (int i = 0; i < 3; i++)
+                    for (int y = 3; y < whiteObject.Length - 3; y++)
                     {
-                        for (int j = 0; j < 3; j++)
+                        int tempcount = 0;
+                        for (int i = 0; i < 3; i++)
                         {
-                            if (whiteObject[x - 2 + i, y - 2 + j] == 1)
+                            for (int j = 0; j < 3; j++)
                             {
-                                tempcount++;
+                                if (whiteObject[x - 2 + i, y - 2 + j].R == Objects[a].Objectnr)
+                                {
+                                    tempcount++;
+                                }
                             }
                         }
-                    }
 
-                    if (tempcount < 9 && tempcount > 0 && whiteObject[x, y] == 1)
-                    {
-                        count++;
+                        if (tempcount < 9 && tempcount > 0 && whiteObject[x, y].R == Objects[a].Objectnr)
+                        {
+                            count++;
+                        }
                     }
                 }
+                Objects[a].Perimeter = count;
             }
-            return count;
         }
 
-        int area(byte[,] whiteObject)
+        public void CalculateAreas(Color[,] whiteObject)
         {
-            int area = 0;
-            for (int x = 0; x < whiteObject.Length; x++)
+            for (int i = 0; i < Objects.Count; i++)
             {
-                for (int y = 0; y < whiteObject.Length; y++)
+                int area = 0;
+                for (int x = 0; x < whiteObject.Length; x++)
                 {
-                    if (whiteObject[x, y] == 1)
+                    for (int y = 0; y < whiteObject.Length; y++)
                     {
-                        area++;
+                        if (whiteObject[x, y].R == Objects[i].Objectnr)
+                        {
+                            area++;
+                        }
+                    }
+                }
+
+                Objects[i].Area = area;
+            }
+        }
+
+        private void compactness(Color[,] image)
+        {
+            for (int i = 0; i < Objects.Count; i++)
+            {
+                double compactness = 0;
+                compactness = (Objects[i].Perimeter * Objects[i].Perimeter) / (4 * Math.PI * Objects[i].Area);
+
+                Objects[i].Compactness = compactness;
+            }
+        }
+
+        public class PictureObject
+        {
+            public int Objectnr, Perimeter, Area;
+            public double Compactness;
+
+            public PictureObject(int Objectnr)
+            {
+                this.Objectnr = Objectnr;
+            }
+        }
+
+        private void DeleteObjects(int toBeRemoved) {
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    if(objectMap[x,y].R == toBeRemoved){
+                        objectMap[x, y] = Color.FromArgb(0,0,0);
                     }
                 }
             }
-
-            return area;
         }
 
     }
